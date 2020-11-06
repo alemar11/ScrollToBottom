@@ -2,6 +2,7 @@ import UIKit
 
 class Layout: UICollectionViewLayout {
   private var cache: [UICollectionViewLayoutAttributes] = []
+  private let vSpacing: CGFloat = 10
 
   private var contentWidth: CGFloat{
     guard let collectionView = collectionView else { return .zero
@@ -36,13 +37,12 @@ class Layout: UICollectionViewLayout {
 
     cache.removeAll()
 
-    let vSpacing: CGFloat = 10
     var yOrigin: CGFloat = 0
     contentHeight = 0
 
     for item in 0..<collectionView.numberOfItems(inSection: 0) {
       let indexPath = IndexPath(item: item, section: 0)
-      let itemHeight: CGFloat = 80
+      let itemHeight: CGFloat = 120 // for the moment we assume that all the items have the same height
 
       let frame = CGRect(x: 0, y: yOrigin, width: contentWidth, height: itemHeight)
       yOrigin += itemHeight + vSpacing
