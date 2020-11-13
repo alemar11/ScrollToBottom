@@ -48,9 +48,6 @@ class ViewController: UIViewController {
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
-
-    print(#function)
-
     self.items = (0..<20).map { $0 }
     collectionView.reloadData()
     collectionView.collectionViewLayout.prepare()
@@ -82,7 +79,7 @@ class ViewController: UIViewController {
 
   func scrollToBottom(animated: Bool) {
     // self.collectionView.scrollToItem(at: IndexPath(row: self.items.count - 1, section: 0), at: .bottom, animated: true)
-
+    
     let animationDuration: TimeInterval = animated ? 2 : 0
     UIView.animate(withDuration: animationDuration) {
       self.collectionView.scrollToItem(at: IndexPath(row: self.items.count - 1, section: 0), at: .bottom, animated: false)
@@ -150,7 +147,6 @@ extension UICollectionView {
     let sectionIndex = numberOfSections - 1
     let itemIndex = numberOfItems(inSection: sectionIndex) - 1
     let lastIndexPath = IndexPath(item: itemIndex, section: sectionIndex)
-    print(lastIndexPath)
     return isItemFullyVisibleAtIndexPath(lastIndexPath)
   }
 }
