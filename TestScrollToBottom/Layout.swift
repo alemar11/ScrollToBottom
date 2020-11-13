@@ -2,7 +2,7 @@ import UIKit
 
 class Layout: UICollectionViewLayout {
   private var cache: [UICollectionViewLayoutAttributes] = []
-  private let vSpacing: CGFloat = 10
+  private let vSpacing: CGFloat = 0
 
   private var contentWidth: CGFloat{
     guard let collectionView = collectionView else { return .zero
@@ -55,9 +55,12 @@ class Layout: UICollectionViewLayout {
     }
   }
 
-//  override func initialLayoutAttributesForAppearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-//    let attr = super.initialLayoutAttributesForAppearingItem(at: itemIndexPath)
-//    attr?.alpha = 1.0
-//    return attr
-//  }
+  override func initialLayoutAttributesForAppearingItem(at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+    let attr = super.initialLayoutAttributesForAppearingItem(at: itemIndexPath)
+    attr?.alpha = 0.99
+    // to fix the disappearing topmost cell when a new one gets inserted we must have:
+    // 1. collectionView bottomInset > 0 (min for 2x is 0.5 and 0.33 for 3x)
+    // 2. to avoid the fade in animation, don't use 1.0 but 0.99
+    return attr
+  }
 }

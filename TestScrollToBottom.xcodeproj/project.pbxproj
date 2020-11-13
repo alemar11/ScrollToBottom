@@ -14,6 +14,7 @@
 		D20006742546E499008087F1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D20006722546E499008087F1 /* LaunchScreen.storyboard */; };
 		D200067D2546E4B3008087F1 /* Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D200067C2546E4B3008087F1 /* Cell.swift */; };
 		D20006802546E4E5008087F1 /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D200067F2546E4E5008087F1 /* Layout.swift */; };
+		D27D1FD1255BE9DB00FFF2FE /* SerialTaskQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27D1FD0255BE9DB00FFF2FE /* SerialTaskQueue.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		D20006752546E499008087F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D200067C2546E4B3008087F1 /* Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cell.swift; sourceTree = "<group>"; };
 		D200067F2546E4E5008087F1 /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
+		D27D1FD0255BE9DB00FFF2FE /* SerialTaskQueue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SerialTaskQueue.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 		D20006662546E498008087F1 /* TestScrollToBottom */ = {
 			isa = PBXGroup;
 			children = (
+				D27D1FD0255BE9DB00FFF2FE /* SerialTaskQueue.swift */,
 				D20006672546E498008087F1 /* AppDelegate.swift */,
 				D20006692546E498008087F1 /* SceneDelegate.swift */,
 				D200066B2546E498008087F1 /* ViewController.swift */,
@@ -141,6 +144,7 @@
 			files = (
 				D200066C2546E498008087F1 /* ViewController.swift in Sources */,
 				D200067D2546E4B3008087F1 /* Cell.swift in Sources */,
+				D27D1FD1255BE9DB00FFF2FE /* SerialTaskQueue.swift in Sources */,
 				D20006802546E4E5008087F1 /* Layout.swift in Sources */,
 				D20006682546E498008087F1 /* AppDelegate.swift in Sources */,
 				D200066A2546E498008087F1 /* SceneDelegate.swift in Sources */,

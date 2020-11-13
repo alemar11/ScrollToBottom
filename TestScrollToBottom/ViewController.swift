@@ -1,10 +1,13 @@
 import UIKit
 import Combine
 
-let animationDuration: TimeInterval = 0.25
+let animationDuration: TimeInterval = 3.25
 
 class ViewController: UIViewController {
   private var items = [Int]()
+  private var cancellable: AnyCancellable?
+
+  let queue = SerialTaskQueue()
 
   lazy var collectionView: UICollectionView = {
     let layout = Layout()
@@ -20,13 +23,14 @@ class ViewController: UIViewController {
     collectionView.delegate = self
     collectionView.dataSource = self
     collectionView.backgroundColor = .black
-    collectionView.contentInset = .zero
+    collectionView.contentInset = .init(top: 8, left: 0, bottom: 0.33, right: 0)
     return collectionView
   }()
 
   override func viewDidLoad() {
     super.viewDidLoad()
     collectionView.register(Cell.self, forCellWithReuseIdentifier: Cell.reusableID)
+    view.backgroundColor = .systemBackground
     view.addSubview(collectionView)
     let top = collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
     let bottom = collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
@@ -47,32 +51,60 @@ class ViewController: UIViewController {
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
 
+    print(#function)
+
     self.items = (0..<20).map { $0 }
     collectionView.reloadData()
     collectionView.collectionViewLayout.prepare()
     collectionView.scrollToBottom(animated: false)
+
+    queue.start()
+    //    cancellable = Timer.publish(every: 2, on: .main, in: .common).autoconnect().sink { [weak self] _ in
+    //      self?.addItem()
+    //    }
   }
+
+  private var shouldScrollToTheBottom = true
 
   @objc
   private func addItem() {
-    let wasAtBottomEdge = self.collectionView.isScrolledAtBottomEdge()
+    queue.addTask { [weak self] complete in
+      guard let self = self else { return }
+      self.collectionView.performBatchUpdates {
+        var newItem = 0
+        if let lastItem = self.items.last {
+          newItem = lastItem + 1
+        }
+        self.items.append(newItem)
 
-    self.collectionView.performBatchUpdates {
-      var newItem = 0
-      if let lastItem = self.items.last {
-        newItem = lastItem + 1
+        self.collectionView.insertItems(at: [IndexPath(row: newItem, section: 0)])
+      } completion: { _ in
+
       }
-      self.items.append(newItem)
-      self.collectionView.insertItems(at: [IndexPath(row: newItem, section: 0)])
-    } completion: { _ in
 
+      if self.shouldScrollToTheBottom {
+        //self.collectionView.scrollToBottom()
+        self.scrollToBottom(animated: true) {
+          //self.shouldScrollToTheBottom = true
+
+        }
+        complete()
+        print("scroll to the bottom")
+      } else {
+        print("keep the current position")
+        complete()
+      }
     }
 
-    if wasAtBottomEdge {
-      self.collectionView.scrollToBottom()
-      print("scroll to the bottom")
-    } else {
-      print("keep the current position")
+
+  }
+
+  func scrollToBottom(animated: Bool, block: (() -> Void)? = nil) {
+
+    //    self.collectionView.scrollToItem(at: IndexPath(row: self.items.count - 1, section: 0), at: .bottom, animated: true)
+
+    UIView.animate(withDuration: 2) {
+      self.collectionView.scrollToItem(at: IndexPath(row: self.items.count - 1, section: 0), at: .bottom, animated: false)
     }
 
   }
@@ -87,10 +119,28 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     let chatCell = cell as! Cell
     let item = items[indexPath.row]
     chatCell.label.text = "\(item)"
-    chatCell.backgroundColor = .gray
     return chatCell
   }
 }
+
+extension ViewController {
+  open func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    if collectionView.isDragging && !collectionView.isDecelerating {
+      shouldScrollToTheBottom = collectionView.isScrolledAtBottomEdge()
+    } else {
+      //wait for scrollViewDidEndDecelerating
+    }
+  }
+
+  func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    shouldScrollToTheBottom = collectionView.isScrolledAtBottomEdge()
+  }
+
+  func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    shouldScrollToTheBottom = collectionView.isScrolledAtBottomEdge()
+  }
+}
+
 
 extension UICollectionView {
   var contentVisibleArea: CGRect {
@@ -103,13 +153,13 @@ extension UICollectionView {
     let offset = CGPoint(x: 0, y: offsetY)
 
     // 🚩 With this approach, the topmost cell will disappear when it is about to go offscreen
-    let duration: TimeInterval = animated ? animationDuration : 0
-    UIView.animate(withDuration: duration) {
-      self.contentOffset = offset
-    }
+    //    let duration: TimeInterval = animated ? animationDuration : 0
+    //    UIView.animate(withDuration: duration) {
+    //      self.contentOffset = offset
+    //    }
 
     // 🚩 If we use this method and we press "New Item" very quickly, the collection won't scroll to the bottom after a while
-    // setContentOffset(offset, animated: animated)
+    setContentOffset(offset, animated: animated)
   }
 
   func frameForItem(at indexPath: IndexPath) -> CGRect? {
@@ -128,6 +178,7 @@ extension UICollectionView {
     let sectionIndex = numberOfSections - 1
     let itemIndex = numberOfItems(inSection: sectionIndex) - 1
     let lastIndexPath = IndexPath(item: itemIndex, section: sectionIndex)
+    print(lastIndexPath)
     return isItemFullyVisibleAtIndexPath(lastIndexPath)
   }
 }
