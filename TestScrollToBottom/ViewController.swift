@@ -58,6 +58,7 @@ class ViewController: UIViewController {
 
   @objc
   private func addItem() {
+    UIView.animate(withDuration: animationDuration) {
     self.collectionView.performBatchUpdates {
       var newItem = 0
       if let lastItem = self.items.last {
@@ -66,6 +67,9 @@ class ViewController: UIViewController {
       self.items.append(newItem)
 
       self.collectionView.insertItems(at: [IndexPath(row: newItem, section: 0)])
+    } completion: { (_) in
+
+    }
     }
 
     if self.shouldScrollToTheBottom {
@@ -81,9 +85,10 @@ class ViewController: UIViewController {
     // self.collectionView.scrollToItem(at: IndexPath(row: self.items.count - 1, section: 0), at: .bottom, animated: true)
     
     let animationDuration: TimeInterval = animated ? 2 : 0
-    UIView.animate(withDuration: animationDuration) {
-      self.collectionView.scrollToItem(at: IndexPath(row: self.items.count - 1, section: 0), at: .bottom, animated: false)
-    }
+    //UIView.animate(withDuration: animationDuration) {
+    //self.collectionView.setValue(animationDuration, forKey: "contentOffsetAnimationDuration")
+      self.collectionView.scrollToItem(at: IndexPath(row: self.items.count - 1, section: 0), at: .bottom, animated: true)
+    //}
   }
 
 }
