@@ -74,13 +74,13 @@ class ViewController: UIViewController {
 
     }
 
-    //if wasAtBottomEdge {
+    if wasAtBottomEdge {
+      // NOTE: this logic won't work when using a Combine publisher that add items very quickly
       self.collectionView.scrollToBottom()
       //print("scroll to the bottom")
-    //} else {
-      //print("keep the current position")
-    //}
-
+    } else {
+      print("keep the current position")
+    }
   }
 
 }
@@ -94,7 +94,6 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     let item = items[indexPath.row]
     chatCell.label.text = "\(item)"
     chatCell.backgroundColor = .gray
-    print(item)
     return chatCell
   }
 }
@@ -109,13 +108,16 @@ extension UICollectionView {
     let offsetY = max(-contentInset.top, collectionViewLayout.collectionViewContentSize.height - bounds.height + contentInset.bottom)
     let offset = CGPoint(x: 0, y: offsetY)
 
-    // 🚩 With this approach, the topmost cell will disappear when it is about to go offscreen
+
     let duration: TimeInterval = animated ? animationDuration : 0
+    // 🚩 With this approach, the topmost cell will disappear when it is about to go offscreen
 //    UIView.animate(withDuration: duration) {
 //      self.contentOffset = offset
 //    }
-    self.setContentOffset(offset, duration: duration, timingFunction: .linear) {
-      print("-")
+
+    // ✅ Custom scroll animation
+    self.setContentOffset(offset, duration: duration, interpolationFunction: lerp) {
+      print("finish scroll")
     }
 
     // 🚩 If we use this method and we press "New Item" very quickly, the collection won't scroll to the bottom after a while

@@ -1,222 +1,99 @@
 import UIKit
 
-public enum ScrollTimingFunction {
+public typealias InterpolationFunction = (_ startValue: CGFloat, _ endValue: CGFloat, _ duration: CGFloat, _ currentTime: CGFloat) -> CGFloat
 
-  case linear
-  case quadIn
-  case quadOut
-  case quadInOut
-  case cubicIn
-  case cubicOut
-  case cubicInOut
-  case quartIn
-  case quartOut
-  case quartInOut
-  case quintIn
-  case quintOut
-  case quintInOut
-  case sineIn
-  case sineOut
-  case sineInOut
-  case expoIn
-  case expoOut
-  case expoInOut
-  case circleIn
-  case circleOut
-  case circleInOut
-
-}
-
-extension ScrollTimingFunction {
-
-  /// 缓存函数
-  /// - Parameters:
-  ///   - t: time
-  ///   - b: begin
-  ///   - c: change
-  ///   - d: duration
-  fileprivate func compute(_ t: CGFloat, _ b: CGFloat, _ c: CGFloat, _ d: CGFloat) -> CGFloat {
-    var t = t
-    switch self {
-    case .linear:
-      return c * t / d + b
-    case .quadIn:
-      t /= d
-      return c * t * t + b
-    case .quadOut:
-      t /= d
-      return -c * t * (t - 2) + b
-    case .quadInOut:
-      t /= d / 2
-      if (t < 1) {
-        return c / 2 * t * t + b
-      }
-      t -= 1
-      return -c / 2 * (t * (t - 2) - 1) + b;
-    case .cubicIn:
-      t /= d
-      return c * t * t * t + b
-    case .cubicOut:
-      t = t / d - 1
-      return c * (t * t * t + 1) + b
-    case .cubicInOut:
-      t /= d / 2
-      if (t < 1) {
-        return c / 2 * t * t * t + b
-      }
-      t -= 2
-      return c / 2 * (t * t * t + 2) + b
-    case .quartIn:
-      t /= d
-      return c * t * t * t * t + b
-    case .quartOut:
-      t = t / d - 1
-      return -c * (t * t * t * t - 1) + b
-    case .quartInOut:
-      t /= d / 2
-      if (t < 1) {
-        return c / 2 * t * t * t * t + b
-      }
-      t -= 2
-      return -c / 2 * (t * t * t * t - 2) + b
-    case .quintIn:
-      t /= d
-      return c * t * t * t * t * t + b
-    case .quintOut:
-      t = t / d - 1
-      return c * ( t * t * t * t * t + 1) + b
-    case .quintInOut:
-      t /= d / 2
-      if (t < 1) {
-        return c / 2 * t * t * t * t * t + b
-      }
-      t -= 2
-      return c / 2 * (t * t * t * t * t + 2) + b
-    case .sineIn:
-      return -c * cos(t / d * (CGFloat.pi / 2)) + c + b
-    case .sineOut:
-      return c * sin(t / d * (CGFloat.pi / 2)) + b
-    case .sineInOut:
-      return -c / 2 * (cos(CGFloat.pi * t / d) - 1) + b
-    case .expoIn:
-      return (t == 0) ? b : c * pow(2, 10 * (t / d - 1)) + b
-    case .expoOut:
-      return (t == d) ? b + c : c * (-pow(2, -10 * t / d) + 1) + b
-    case .expoInOut:
-      if (t == 0) {
-        return b
-      }
-      if (t == d) {
-        return b + c
-      }
-      t /= d / 2
-      if (t < 1) {
-        return c / 2 * pow(2, 10 * (t - 1)) + b
-      }
-      t -= 1
-      return c / 2 * (-pow(2, -10 * t) + 2) + b
-    case .circleIn:
-      t /= d
-      return -c * (sqrt(1 - t * t) - 1) + b
-    case .circleOut:
-      t = t / d - 1
-      return c * sqrt(1 - t * t) + b
-    case .circleInOut:
-      t /= d / 2
-      if (t < 1) {
-        return -c / 2 * (sqrt(1 - t * t) - 1) + b
-      }
-      t -= 2
-      return c / 2 * (sqrt(1 - t * t) + 1) + b
-    }
-  }
-
+// linear interpolation method
+public func lerp(startValue: CGFloat, endValue: CGFloat, duration: CGFloat, currentTime: CGFloat) -> CGFloat {
+  let progress = currentTime/duration
+  return (endValue - startValue) * progress + startValue
 }
 
 public extension UIScrollView {
+  func setContentOffset(_ contentOffset: CGPoint, duration: TimeInterval, interpolationFunction: @escaping InterpolationFunction = lerp, completion: (() -> Void)? = nil) {
+    if contentOffsetAnimator == nil {
+      contentOffsetAnimator = ContentOffsetAnimator(scrollView: self, interpolationFunction: interpolationFunction)
+    }
+    contentOffsetAnimator!.completion = { [weak self] in
+      guard let self = self else { return }
+      dispatchPrecondition(condition: .onQueue(.main))
+      self.contentOffsetAnimator = nil
+      completion?()
+    }
+    contentOffsetAnimator!.setContentOffset(contentOffset, duration: duration)
+  }
+}
 
-  private struct AssociatedKeys {
-    static var animator: String = "animator"
+
+extension UIScrollView {
+  private enum AssociatedKeys {
+    static var contentOffsetAnimator: String = "contentOffsetAnimator"
   }
 
-  private var animator: ScrollViewAnimator? {
+  private var contentOffsetAnimator: ContentOffsetAnimator? {
     set {
-      objc_setAssociatedObject(self, &AssociatedKeys.animator, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+      objc_setAssociatedObject(self, &AssociatedKeys.contentOffsetAnimator, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
     get {
-      objc_getAssociatedObject(self, &AssociatedKeys.animator) as? ScrollViewAnimator
+      objc_getAssociatedObject(self, &AssociatedKeys.contentOffsetAnimator) as? ContentOffsetAnimator
     }
   }
-
-  func setContentOffset(_ contentOffset: CGPoint, duration: TimeInterval, timingFunction: ScrollTimingFunction = .linear, completion: (() -> Void)? = nil) {
-    if animator == nil {
-      animator = ScrollViewAnimator(scrollView: self, timingFunction: timingFunction)
-    }
-    animator!.completion = { [weak self] in
-      guard let self = self else { return }
-      //DispatchQueue.main.async {
-      self.animator = nil
-      //}
-      completion?()
-    }
-    animator!.setContentOffset(contentOffset, duration: duration)
-  }
-
 }
 
-private final class ScrollViewAnimator {
-  var completion: (() -> Void)?
-  private weak var scrollView: UIScrollView?
-  private let timingFunction: ScrollTimingFunction
-  private var startOffset: CGPoint = .zero
-  private var destinationOffset: CGPoint = .zero
-  private var duration: TimeInterval = 0
-  private var runTime: TimeInterval = 0
-  private var displayLink: CADisplayLink?
+extension UIScrollView {
+  private final class ContentOffsetAnimator {
+    var completion: (() -> Void)?
+    private weak var scrollView: UIScrollView?
+    private let interpolationFunction: InterpolationFunction
+    private var startOffset: CGPoint = .zero
+    private var destinationOffset: CGPoint = .zero
+    private var duration: TimeInterval = .zero
+    private var runTime: TimeInterval = .zero
+    private var displayLink: CADisplayLink?
 
-  init(scrollView: UIScrollView, timingFunction: ScrollTimingFunction) {
-    self.scrollView = scrollView
-    self.timingFunction = timingFunction
-  }
-
-  func setContentOffset(_ contentOffset: CGPoint, duration: TimeInterval) {
-    guard let scrollView = scrollView else { return }
-
-    startOffset = scrollView.contentOffset
-    destinationOffset = contentOffset
-    self.duration = duration
-    runTime = 0
-    guard self.duration > 0 else {
-      scrollView.contentOffset = contentOffset
-      return
+    init(scrollView: UIScrollView, interpolationFunction: @escaping InterpolationFunction) {
+      self.scrollView = scrollView
+      self.interpolationFunction = interpolationFunction
     }
-    if displayLink == nil {
-      displayLink = CADisplayLink(target: self, selector: #selector(updateContentOffset))
-      displayLink?.add(to: .main, forMode: .default) // .common to avoid user interruption // TODO try to add to .current
+
+    func setContentOffset(_ contentOffset: CGPoint, duration: TimeInterval) {
+      guard let scrollView = scrollView else { return }
+
+      startOffset = scrollView.contentOffset
+      destinationOffset = contentOffset
+      self.duration = duration
+      runTime = 0
+      guard self.duration > 0 else {
+        scrollView.contentOffset = contentOffset
+        return
+      }
+      if displayLink == nil {
+        displayLink = CADisplayLink(target: self, selector: #selector(updateContentOffset))
+        displayLink?.add(to: .main, forMode: .default) // .common to avoid user interruption
+      }
     }
-  }
 
-  @objc
-  func updateContentOffset() {
-    guard let displayLink = displayLink else { return }
-    guard let scrollView = scrollView else { return }
+    @objc
+    func updateContentOffset() {
+      guard let displayLink = displayLink else { return }
+      guard let scrollView = scrollView else { return }
 
-    runTime += displayLink.duration
+      runTime += displayLink.duration
 
-    if runTime >= duration {
-      // animation is finished
-      scrollView.contentOffset = destinationOffset
-      displayLink.invalidate()
-      self.displayLink = nil
-      completion?()
-    } else {
-      // calculate offset for this frame of the animation
-      var offset = CGPoint.zero
-      offset.x = timingFunction.compute(CGFloat(runTime), startOffset.x, destinationOffset.x - startOffset.x, CGFloat(duration))
-      offset.y = timingFunction.compute(CGFloat(runTime), startOffset.y, destinationOffset.y - startOffset.y, CGFloat(duration))
-      scrollView.contentOffset = offset
+      if runTime >= duration {
+        // animation is finished
+        scrollView.contentOffset = destinationOffset
+        displayLink.invalidate()
+        self.displayLink = nil
+        completion?()
+      } else {
+        // calculate offset for this frame of the animation
+        var offset = CGPoint.zero
+        print(destinationOffset.y - startOffset.y)
+        offset.x = interpolationFunction(startOffset.x, destinationOffset.x, CGFloat(duration), CGFloat(runTime))
+        offset.y = interpolationFunction(startOffset.y, destinationOffset.y, CGFloat(duration), CGFloat(runTime))
+        scrollView.contentOffset = offset
+      }
     }
-  }
 
+  }
 }
-
