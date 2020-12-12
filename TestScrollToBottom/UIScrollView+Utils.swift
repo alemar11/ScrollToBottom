@@ -144,7 +144,7 @@ public extension UIScrollView {
       objc_setAssociatedObject(self, &AssociatedKeys.animator, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
     get {
-      return objc_getAssociatedObject(self, &AssociatedKeys.animator) as? ScrollViewAnimator
+      objc_getAssociatedObject(self, &AssociatedKeys.animator) as? ScrollViewAnimator
     }
   }
 
@@ -152,11 +152,11 @@ public extension UIScrollView {
     if animator == nil {
       animator = ScrollViewAnimator(scrollView: self, timingFunction: timingFunction)
     }
-    animator!.closure = { [weak self] in
-      guard let strongSelf = self else { return }
-      DispatchQueue.main.async {
-        strongSelf.animator = nil
-      }
+    animator!.completion = { [weak self] in
+      guard let self = self else { return }
+      //DispatchQueue.main.async {
+      self.animator = nil
+      //}
       completion?()
     }
     animator!.setContentOffset(contentOffset, duration: duration)
@@ -165,15 +165,14 @@ public extension UIScrollView {
 }
 
 private final class ScrollViewAnimator {
-  weak var scrollView: UIScrollView?
-  let timingFunction: ScrollTimingFunction
-  var closure: (() -> Void)?
-  var startOffset: CGPoint = .zero
-  var destinationOffset: CGPoint = .zero
-  var duration: TimeInterval = 0
-  var runTime: TimeInterval = 0
-
-  var displayLink: CADisplayLink?
+  var completion: (() -> Void)?
+  private weak var scrollView: UIScrollView?
+  private let timingFunction: ScrollTimingFunction
+  private var startOffset: CGPoint = .zero
+  private var destinationOffset: CGPoint = .zero
+  private var duration: TimeInterval = 0
+  private var runTime: TimeInterval = 0
+  private var displayLink: CADisplayLink?
 
   init(scrollView: UIScrollView, timingFunction: ScrollTimingFunction) {
     self.scrollView = scrollView
@@ -192,29 +191,31 @@ private final class ScrollViewAnimator {
       return
     }
     if displayLink == nil {
-      displayLink = CADisplayLink(target: self, selector: #selector(animtedScroll))
-      displayLink?.add(to: .main, forMode: .default) // .common to avoid user interruption
+      displayLink = CADisplayLink(target: self, selector: #selector(updateContentOffset))
+      displayLink?.add(to: .main, forMode: .default) // .common to avoid user interruption // TODO try to add to .current
     }
   }
 
   @objc
-  func animtedScroll() {
+  func updateContentOffset() {
     guard let displayLink = displayLink else { return }
     guard let scrollView = scrollView else { return }
 
     runTime += displayLink.duration
+
     if runTime >= duration {
+      // animation is finished
       scrollView.contentOffset = destinationOffset
       displayLink.invalidate()
       self.displayLink = nil
-      closure?()
-      return
+      completion?()
+    } else {
+      // calculate offset for this frame of the animation
+      var offset = CGPoint.zero
+      offset.x = timingFunction.compute(CGFloat(runTime), startOffset.x, destinationOffset.x - startOffset.x, CGFloat(duration))
+      offset.y = timingFunction.compute(CGFloat(runTime), startOffset.y, destinationOffset.y - startOffset.y, CGFloat(duration))
+      scrollView.contentOffset = offset
     }
-
-    var offset = scrollView.contentOffset
-    offset.x = timingFunction.compute(CGFloat(runTime), startOffset.x, destinationOffset.x - startOffset.x, CGFloat(duration))
-    offset.y = timingFunction.compute(CGFloat(runTime), startOffset.y, destinationOffset.y - startOffset.y, CGFloat(duration))
-    scrollView.contentOffset = offset
   }
 
 }
