@@ -164,20 +164,16 @@ public extension UIScrollView {
 
 }
 
-private class ScrollViewAnimator {
-
+private final class ScrollViewAnimator {
   weak var scrollView: UIScrollView?
   let timingFunction: ScrollTimingFunction
-
   var closure: (() -> Void)?
-
-  var startTime: TimeInterval = 0
   var startOffset: CGPoint = .zero
   var destinationOffset: CGPoint = .zero
   var duration: TimeInterval = 0
   var runTime: TimeInterval = 0
 
-  var timer: CADisplayLink?
+  var displayLink: CADisplayLink?
 
   init(scrollView: UIScrollView, timingFunction: ScrollTimingFunction) {
     self.scrollView = scrollView
@@ -185,35 +181,32 @@ private class ScrollViewAnimator {
   }
 
   func setContentOffset(_ contentOffset: CGPoint, duration: TimeInterval) {
-    guard let scrollView = scrollView else {
-      return
-    }
-    startTime = Date().timeIntervalSince1970
+    guard let scrollView = scrollView else { return }
+
     startOffset = scrollView.contentOffset
     destinationOffset = contentOffset
     self.duration = duration
     runTime = 0
     guard self.duration > 0 else {
-      //scrollView.setContentOffset(contentOffset, animated: false)
       scrollView.contentOffset = contentOffset
       return
     }
-    if timer == nil {
-      timer = CADisplayLink(target: self, selector: #selector(animtedScroll))
-      timer?.add(to: .main, forMode: .default) // .common to avoid user interruption
+    if displayLink == nil {
+      displayLink = CADisplayLink(target: self, selector: #selector(animtedScroll))
+      displayLink?.add(to: .main, forMode: .default) // .common to avoid user interruption
     }
   }
 
   @objc
   func animtedScroll() {
-    guard let timer = timer else { return }
+    guard let displayLink = displayLink else { return }
     guard let scrollView = scrollView else { return }
-    runTime += timer.duration
+
+    runTime += displayLink.duration
     if runTime >= duration {
-      //scrollView.setContentOffset(destinationOffset, animated: false)
       scrollView.contentOffset = destinationOffset
-      timer.invalidate()
-      self.timer = nil
+      displayLink.invalidate()
+      self.displayLink = nil
       closure?()
       return
     }
@@ -221,7 +214,6 @@ private class ScrollViewAnimator {
     var offset = scrollView.contentOffset
     offset.x = timingFunction.compute(CGFloat(runTime), startOffset.x, destinationOffset.x - startOffset.x, CGFloat(duration))
     offset.y = timingFunction.compute(CGFloat(runTime), startOffset.y, destinationOffset.y - startOffset.y, CGFloat(duration))
-    //scrollView.setContentOffset(offset, animated: false)
     scrollView.contentOffset = offset
   }
 
