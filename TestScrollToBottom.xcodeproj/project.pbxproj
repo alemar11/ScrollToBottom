@@ -14,6 +14,7 @@
 		D20006742546E499008087F1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D20006722546E499008087F1 /* LaunchScreen.storyboard */; };
 		D200067D2546E4B3008087F1 /* Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D200067C2546E4B3008087F1 /* Cell.swift */; };
 		D20006802546E4E5008087F1 /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D200067F2546E4E5008087F1 /* Layout.swift */; };
+		D2E1DF1F2584D102002DF5EB /* UIScrollView+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E1DF1E2584D102002DF5EB /* UIScrollView+Utils.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		D20006752546E499008087F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D200067C2546E4B3008087F1 /* Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cell.swift; sourceTree = "<group>"; };
 		D200067F2546E4E5008087F1 /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
+		D2E1DF1E2584D102002DF5EB /* UIScrollView+Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIScrollView+Utils.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +68,7 @@
 				D20006752546E499008087F1 /* Info.plist */,
 				D200067C2546E4B3008087F1 /* Cell.swift */,
 				D200067F2546E4E5008087F1 /* Layout.swift */,
+				D2E1DF1E2584D102002DF5EB /* UIScrollView+Utils.swift */,
 			);
 			path = TestScrollToBottom;
 			sourceTree = "<group>";
@@ -142,6 +145,7 @@
 				D200066C2546E498008087F1 /* ViewController.swift in Sources */,
 				D200067D2546E4B3008087F1 /* Cell.swift in Sources */,
 				D20006802546E4E5008087F1 /* Layout.swift in Sources */,
+				D2E1DF1F2584D102002DF5EB /* UIScrollView+Utils.swift in Sources */,
 				D20006682546E498008087F1 /* AppDelegate.swift in Sources */,
 				D200066A2546E498008087F1 /* SceneDelegate.swift in Sources */,
 			);

@@ -1,7 +1,7 @@
 import UIKit
 import Combine
 
-let animationDuration: TimeInterval = 0.25
+let animationDuration: TimeInterval = 0.3
 
 class ViewController: UIViewController {
   private var items = [Int]()
@@ -44,6 +44,8 @@ class ViewController: UIViewController {
     collectionView.dataSource = nil
   }
 
+  var cancellable: AnyCancellable?
+
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
 
@@ -51,6 +53,10 @@ class ViewController: UIViewController {
     collectionView.reloadData()
     collectionView.collectionViewLayout.prepare()
     collectionView.scrollToBottom(animated: false)
+
+//    cancellable = Timer.publish(every: 0.3, on: .main, in: .common).autoconnect().sink { [weak self] (_) in
+//      self?.addItem()
+//    }
   }
 
   @objc
@@ -68,12 +74,12 @@ class ViewController: UIViewController {
 
     }
 
-    if wasAtBottomEdge {
+    //if wasAtBottomEdge {
       self.collectionView.scrollToBottom()
-      print("scroll to the bottom")
-    } else {
-      print("keep the current position")
-    }
+      //print("scroll to the bottom")
+    //} else {
+      //print("keep the current position")
+    //}
 
   }
 
@@ -88,6 +94,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     let item = items[indexPath.row]
     chatCell.label.text = "\(item)"
     chatCell.backgroundColor = .gray
+    print(item)
     return chatCell
   }
 }
@@ -104,8 +111,11 @@ extension UICollectionView {
 
     // 🚩 With this approach, the topmost cell will disappear when it is about to go offscreen
     let duration: TimeInterval = animated ? animationDuration : 0
-    UIView.animate(withDuration: duration) {
-      self.contentOffset = offset
+//    UIView.animate(withDuration: duration) {
+//      self.contentOffset = offset
+//    }
+    self.setContentOffset(offset, duration: duration, timingFunction: .linear) {
+      print("-")
     }
 
     // 🚩 If we use this method and we press "New Item" very quickly, the collection won't scroll to the bottom after a while
